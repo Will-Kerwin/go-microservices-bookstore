@@ -1,0 +1,32 @@
+services:
+  dev-consul:
+    image: hashicorp/consul
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
+    ports:
+      - 8500:8500
+      - 8600:8600/udp
+
+  db:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - db-data:/data/db
+    ports:
+      - 27017:27017
+
+  # books-svc:
+  #   build:
+  #     context: ./books
+  #     target: final
+  #   ports:
+  #     - ${BOOK_SVC_PORT}:${BOOK_SVC_PORT}
+  #   environment:
+  # - PORT=${BOOK_SVC_PORT}
+  # - MONGODB_URI=mongodb://root:example@db:27017
+  # - CONSUL_URI=localhost:8500
+
+volumes:
+  db-data:

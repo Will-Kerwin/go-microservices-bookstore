@@ -1,0 +1,33 @@
+syntax = "proto3";
+option go_package = "/gen";
+
+// --- Author Service ---
+
+message Author {
+    string id  = 1;
+    string name  = 2;
+    int64 date_of_birth = 3;
+}
+
+service AuthorService {
+    rpc GetAuthors(GetAuthorsRequest) returns (GetAuthorsResponse);
+    rpc GetAuthor(GetAuthorRequest) returns (GetAuthorResponse);
+}
+
+message GetAuthorsRequest {
+
+}
+
+message GetAuthorsResponse {
+    repeated Author authors = 1;
+}
+
+message GetAuthorRequest {
+    string id  = 1;
+}
+
+message GetAuthorResponse {
+    Author author = 1;
+}
+
+// --- Book Service ---
