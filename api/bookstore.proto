@@ -12,6 +12,8 @@ message Author {
 service AuthorService {
     rpc GetAuthors(GetAuthorsRequest) returns (GetAuthorsResponse);
     rpc GetAuthor(GetAuthorRequest) returns (GetAuthorResponse);
+    rpc CreateAuthor(CreateAuthorRequest) returns (CreateAuthorResponse);
+    rpc DeleteAuthor(DeleteAuthorRequest) returns (DeleteAuthorResponse);
 }
 
 message GetAuthorsRequest {
@@ -30,4 +32,20 @@ message GetAuthorResponse {
     Author author = 1;
 }
 
+message CreateAuthorRequest{
+    string name  = 1;
+    int64 date_of_birth = 2;
+}
+
+message CreateAuthorResponse {
+    Author author = 1;
+}
+
+message DeleteAuthorRequest {
+    string id = 1;
+}
+
+message DeleteAuthorResponse{
+
+}
 // --- Book Service ---

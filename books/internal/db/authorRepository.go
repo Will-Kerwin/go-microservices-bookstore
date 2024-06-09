@@ -26,7 +26,7 @@ func (r *MongoDbAuthorRepository) getCollection() *mongo.Collection {
 	return r.client.Database(dbName).Collection("authors")
 }
 
-func (r *MongoDbAuthorRepository) Add(ctx context.Context, author *models.Author) error {
+func (r *MongoDbAuthorRepository) Add(ctx context.Context, author *models.Author) (*models.Author, error) {
 	authorDoc := booksModels.AuthorDocument{
 		Name:        author.Name,
 		DateOfBirth: primitive.NewDateTimeFromTime(author.DateOfBirth),
@@ -34,13 +34,15 @@ func (r *MongoDbAuthorRepository) Add(ctx context.Context, author *models.Author
 
 	collection := r.getCollection()
 
-	_, err := collection.InsertOne(ctx, authorDoc)
+	insertResult, err := collection.InsertOne(ctx, authorDoc)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	author.ID = insertResult.InsertedID.(primitive.ObjectID).Hex()
+
+	return author, nil
 }
 
 func (r *MongoDbAuthorRepository) Get(ctx context.Context) ([]*models.Author, error) {

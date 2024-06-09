@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -54,7 +55,7 @@ func (h *Handler) GetAuthor(ctx echo.Context) error {
 			case codes.NotFound:
 				return ctx.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
 			default:
-				log.Printf("GetMovieDetails failed: Err: %v\n", err)
+				log.Printf("GetAuthor failed: Err: %v\n", err)
 				return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 			}
 		}
@@ -64,15 +65,60 @@ func (h *Handler) GetAuthor(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	return ctx.JSON(http.StatusBadRequest, res)
+	return ctx.JSON(http.StatusOK, res)
 }
 
 // Create a new author
 func (h *Handler) CreateAuthor(ctx echo.Context) error {
-	return ctx.NoContent(http.StatusBadRequest)
+
+	author := new(models.Author)
+
+	if err := ctx.Bind(author); err != nil {
+		return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": "could not parse body"})
+	}
+
+	author, err := h.gateway.CreateAuthor(ctx.Request().Context(), author)
+
+	if err != nil {
+		if e, ok := status.FromError(err); ok {
+			switch e.Code() {
+			case codes.NotFound:
+				return ctx.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
+			default:
+				log.Printf("CreateAuthor failed: Err: %v\n", err)
+				return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+			}
+		}
+
+		log.Printf("not able to parse error returned %v", err)
+
+		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+	}
+	return ctx.JSON(http.StatusOK, author)
+
 }
 
 // Delete an author by its id
 func (h *Handler) DeleteAuthor(ctx echo.Context) error {
-	return ctx.NoContent(http.StatusBadRequest)
+	id := ctx.Param("id")
+
+	err := h.gateway.DeleteAuthor(ctx.Request().Context(), id)
+
+	if err != nil {
+		if e, ok := status.FromError(err); ok {
+			switch e.Code() {
+			case codes.NotFound:
+				return ctx.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
+			default:
+				log.Printf("DeleteAuthor failed: Err: %v\n", err)
+				return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+			}
+		}
+
+		log.Printf("not able to parse error returned %v", err)
+
+		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }
