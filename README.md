@@ -13,15 +13,20 @@
 ### Core Requirements
 
 - [ ] Authentication and Authorization
-- [ ] Synchronous communication
-  - RESTful
-  - gRPC
+- [x] Synchronous communication
+  - RESTful - To complete this i've created a api service in which all front end requests will be made RESTfully. I have also implemented swagger to ensure production standard documentation
+  - gRPC - I use gRPC to manage service to service communication this includes communication from the api service to backend services
 - [ ] Service Discovery
-  - consul
-- [ ] Asynchronous communication
-  - Messaging (kafka / rabbitmq)
+  - consul - I use consul to create a service registry to use for endpoints and connections.
+  - TODO: Map the following to service discovery
+    - mongodb
+    - kafka
+- [x] Asynchronous communication
+  - Messaging i use Kafka to handle all asynchronous requests, this includes:
+    - create, update, delete requests
 - [ ] Persistant storage
-  - mongodb
+  - mongodb - i use mongo db to store the data
+  - redis
 - [ ] Containerised deployment
   - docker
   - potential for kubernetes
