@@ -1,0 +1,305 @@
+basePath: /
+definitions:
+  models.ApiErrorResponse:
+    additionalProperties: true
+    type: object
+  models.Author:
+    properties:
+      _id:
+        type: string
+      age:
+        type: string
+      name:
+        type: string
+    type: object
+  models.Book:
+    properties:
+      _id:
+        type: string
+      authorId:
+        type: string
+      genre:
+        type: string
+      imageUrl:
+        type: string
+      synopsis:
+        type: string
+      title:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: support@swagger.io
+    name: Will Kerwin
+    url: http://www.swagger.io/support
+  description: This is the api for the go bookstore microservices project
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Go Microservice Bookstore API
+  version: "1.0"
+paths:
+  /authors:
+    get:
+      consumes:
+      - applicaiton/json
+      description: get the authors from database.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Author'
+            type: array
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Get Authors.
+      tags:
+      - authors
+    post:
+      consumes:
+      - applicaiton/json
+      description: creates an author asynchronously.
+      parameters:
+      - description: author body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Author'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Create an author.
+      tags:
+      - authors
+  /authors/{id}:
+    delete:
+      consumes:
+      - applicaiton/json
+      description: delete the author by id from database.
+      parameters:
+      - description: id of the author
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Delete Author by its object id in hex format.
+      tags:
+      - authors
+    get:
+      consumes:
+      - applicaiton/json
+      description: get the author by id from database.
+      parameters:
+      - description: id of the author
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Author'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Get Author by its object id in hex format.
+      tags:
+      - authors
+  /books:
+    get:
+      consumes:
+      - applicaiton/json
+      description: get the books from database with filters.
+      parameters:
+      - description: title of the book
+        in: path
+        name: title
+        type: string
+      - description: genre of the book
+        in: path
+        name: genre
+        type: string
+      - description: authorId of the book
+        in: path
+        name: authorId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Get Books.
+      tags:
+      - books
+    post:
+      consumes:
+      - applicaiton/json
+      description: creates a book asynchronously.
+      parameters:
+      - description: book body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Create an book.
+      tags:
+      - books
+  /books/{id}:
+    delete:
+      consumes:
+      - applicaiton/json
+      description: delete the book by id from database.
+      parameters:
+      - description: id of the book
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Delete book by its object id in hex format.
+      tags:
+      - books
+    get:
+      consumes:
+      - applicaiton/json
+      description: get the book by id from database.
+      parameters:
+      - description: id of the book
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Get book by its object id in hex format.
+      tags:
+      - books
+    patch:
+      consumes:
+      - applicaiton/json
+      description: Update the book by id from database.
+      parameters:
+      - description: id of the book
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body of the book
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Update book by its object id in hex format.
+      tags:
+      - books
+schemes:
+- http
+swagger: "2.0"

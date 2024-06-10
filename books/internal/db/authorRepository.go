@@ -15,7 +15,7 @@ type MongoDbAuthorRepository struct {
 	client *mongo.Client
 }
 
-func New(client *mongo.Client) *MongoDbAuthorRepository {
+func NewAuthorRepository(client *mongo.Client) *MongoDbAuthorRepository {
 	return &MongoDbAuthorRepository{
 		client: client,
 	}

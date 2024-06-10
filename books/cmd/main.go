@@ -11,6 +11,7 @@ import (
 
 	"github.com/will-kerwin/go-microservice-bookstore/books/internal/db"
 	"github.com/will-kerwin/go-microservice-bookstore/books/internal/grpc/author"
+	"github.com/will-kerwin/go-microservice-bookstore/books/internal/grpc/book"
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/discovery"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -76,10 +77,15 @@ func main() {
 	log.Println("Connected to mongodb")
 
 	// load repo and handler
-	authorRepository := db.New(client)
-	authorHandler := author.New(authorRepository, kafkaUri, serviceName)
+	authorRepository := db.NewAuthorRepository(client)
+	bookRepository := db.NewBookRepository(client)
 
+	authorHandler := author.New(authorRepository, kafkaUri, serviceName)
+	bookHandler := book.New(bookRepository, kafkaUri, serviceName)
+
+	// handle ingestors
 	authorHandler.HandleIngestors(ctx)
+	bookHandler.HandleIngestors(ctx)
 
 	// create grpc listener
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
@@ -91,6 +97,8 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	gen.RegisterAuthorServiceServer(grpcServer, authorHandler)
+	gen.RegisterBookServiceServer(grpcServer, bookHandler)
+
 	if err := grpcServer.Serve(lis); err != nil {
 		panic(err)
 	}

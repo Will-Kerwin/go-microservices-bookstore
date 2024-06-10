@@ -37,18 +37,37 @@ func (h *Handler) Register(r *echo.Echo) {
 	r.DELETE("/authors/:id", h.DeleteAuthor)
 }
 
-// Get all authors
+// GetAuthors godoc
+// @Summary Get Authors.
+// @Description get the authors from database.
+// @Tags authors
+// @Accept applicaiton/json
+// @Produce json
+// @Success 200 {object} []models.Author
+// @Failure 502 {object} models.ApiErrorResponse
+// @Router /authors [get]
 func (h *Handler) GetAuthors(ctx echo.Context) error {
 	res, err := h.gateway.Get(ctx.Request().Context())
 
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 
 	return ctx.JSON(http.StatusOK, res)
 }
 
-// Get an author by its ID
+// GetAuthor godoc
+// @Summary Get Author by its object id in hex format.
+// @Description get the author by id from database.
+// @Tags authors
+// @Accept applicaiton/json
+// @Produce json
+// @Param  id path string true "id of the author"
+// @Success 200 {object} models.Author
+// @Failure 400 {object} models.ApiErrorResponse
+// @Failure 404 {object} models.ApiErrorResponse
+// @Failure 502 {object} models.ApiErrorResponse
+// @Router /authors/{id} [get]
 func (h *Handler) GetAuthor(ctx echo.Context) error {
 
 	id := ctx.Param("id")
@@ -59,22 +78,32 @@ func (h *Handler) GetAuthor(ctx echo.Context) error {
 		if e, ok := status.FromError(err); ok {
 			switch e.Code() {
 			case codes.NotFound:
-				return ctx.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
+				return ctx.JSON(http.StatusNotFound, models.ApiErrorResponse{"error": err.Error()})
 			default:
 				log.Printf("GetAuthor failed: Err: %v\n", err)
-				return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+				return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": err.Error()})
 			}
 		}
 
 		log.Printf("not able to parse error returned %v", err)
 
-		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 
 	return ctx.JSON(http.StatusOK, res)
 }
 
-// Create a new author
+// CreateAuthor godoc
+// @Summary Create an author.
+// @Description creates an author asynchronously.
+// @Tags authors
+// @Accept applicaiton/json
+// @Produce json
+// @Param  body body models.Author true "author body"
+// @Success 201
+// @Success 400 {object} models.ApiErrorResponse
+// @Success 502 {object} models.ApiErrorResponse
+// @Router /authors [post]
 func (h *Handler) CreateAuthor(ctx echo.Context) error {
 	topicName := "createAuthor"
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
@@ -86,7 +115,7 @@ func (h *Handler) CreateAuthor(ctx echo.Context) error {
 	author := new(models.Author)
 
 	if err := ctx.Bind(author); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": "could not parse body"})
+		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "could not parse body"})
 	}
 
 	encodedEvent, err := json.Marshal(models.CreateAuthorEvent{
@@ -95,7 +124,7 @@ func (h *Handler) CreateAuthor(ctx echo.Context) error {
 	})
 
 	if err != nil {
-		return err
+		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": err.Error()})
 	}
 
 	message := &kafka.Message{
@@ -104,7 +133,7 @@ func (h *Handler) CreateAuthor(ctx echo.Context) error {
 	}
 
 	if err := producer.Produce(message, nil); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
@@ -113,7 +142,17 @@ func (h *Handler) CreateAuthor(ctx echo.Context) error {
 
 }
 
-// Delete an author by its id
+// DeleteAuthor godoc
+// @Summary Delete Author by its object id in hex format.
+// @Description delete the author by id from database.
+// @Tags authors
+// @Accept applicaiton/json
+// @Produce json
+// @Param  id path string true "id of the author"
+// @Success 202
+// @Failure 400 {object} models.ApiErrorResponse
+// @Failure 502 {object} models.ApiErrorResponse
+// @Router /authors/{id} [delete]
 func (h *Handler) DeleteAuthor(ctx echo.Context) error {
 	id := ctx.Param("id")
 
@@ -126,7 +165,7 @@ func (h *Handler) DeleteAuthor(ctx echo.Context) error {
 
 	encodedEvent, err := json.Marshal(models.DeleteAuthorEvent{ID: id})
 	if err != nil {
-		return err
+		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": err.Error()})
 	}
 
 	message := &kafka.Message{
@@ -135,10 +174,10 @@ func (h *Handler) DeleteAuthor(ctx echo.Context) error {
 	}
 
 	if err := producer.Produce(message, nil); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
 
-	return ctx.NoContent(http.StatusNoContent)
+	return ctx.NoContent(http.StatusAccepted)
 }

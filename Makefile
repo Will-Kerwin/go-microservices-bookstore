@@ -10,4 +10,7 @@ books:
 protobuf:
 	protoc -I=api --go_out=. --go-grpc_out=. bookstore.proto         
 
-.PHONY: api-service books compose protobuf
+swag:
+	swag init -g ./api-service/cmd/main.go --output ./docs
+
+.PHONY: api-service books compose protobuf swag

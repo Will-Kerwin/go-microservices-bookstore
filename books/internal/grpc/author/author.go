@@ -28,6 +28,7 @@ func New(repository db.AuthorRepository, addr string, groupID string) *Handler {
 		log.Fatalf("Failed to create ingester: %s\n", err)
 		createAuthorIngester = nil
 	}
+
 	deleteAuthorIngester, err := ingester.New[models.DeleteAuthorEvent](addr, groupID, "deleteAuthor")
 	if err != nil {
 		log.Fatalf("Failed to create ingester: %s\n", err)

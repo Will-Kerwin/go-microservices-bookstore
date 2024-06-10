@@ -9,15 +9,33 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	authorGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/author"
 	bookGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/book"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/author"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/book"
+	_ "github.com/will-kerwin/go-microservice-bookstore/docs" // Import the docs
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/discovery"
 )
 
 const serviceName = "api"
 
+// @title Go Microservice Bookstore API
+// @version 1.0
+// @description This is the api for the go bookstore microservices project
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Will Kerwin
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8081
+// @BasePath /
+// @schemes http
 func main() {
 
 	var port int
@@ -64,11 +82,18 @@ func main() {
 
 	// setup handlers
 	authorHandler := author.New(authorGateway, kafkaUri)
-	bookHandler := book.New(bookGateway)
+	bookHandler := book.New(bookGateway, kafkaUri)
 
 	// init handlers
 	authorHandler.Register(router)
 	bookHandler.Register(router)
+	router.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	// middleware
+
+	router.Use(middleware.Logger())
+	router.Use(middleware.Recover())
+	router.Use(middleware.CORS())
 
 	router.Logger.Fatal(router.Start(fmt.Sprintf(":%d", port)))
 
