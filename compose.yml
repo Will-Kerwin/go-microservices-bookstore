@@ -17,6 +17,11 @@ services:
     ports:
       - 27017:27017
 
+  kafka:
+    image: apache/kafka
+    restart: always
+    ports:
+      - 9092:9092
   # books-svc:
   #   build:
   #     context: ./books

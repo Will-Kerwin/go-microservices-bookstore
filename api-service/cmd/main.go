@@ -26,6 +26,7 @@ func main() {
 
 	// register with consul
 	registryUri := os.Getenv("CONSUL_URI")
+	kafkaUri := os.Getenv("KAFKA_URI")
 	regisrty, err := discovery.NewRegistry(registryUri)
 
 	if err != nil {
@@ -60,8 +61,9 @@ func main() {
 	// setup grpc gateways
 	authorGateway := authorGateway.New(*regisrty)
 	bookGateway := bookGateway.New(*regisrty)
+
 	// setup handlers
-	authorHandler := author.New(authorGateway)
+	authorHandler := author.New(authorGateway, kafkaUri)
 	bookHandler := book.New(bookGateway)
 
 	// init handlers

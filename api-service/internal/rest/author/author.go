@@ -1,26 +1,31 @@
 package author
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/labstack/echo/v4"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
 
-	// "github.com/will-kerwin/go-microservice-bookstore/pkg/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 // HTTP Handler for author endpoints
 type Handler struct {
-	gateway gateway.AuthorGateway
+	gateway  gateway.AuthorGateway
+	kafkaUri string
 }
 
 // Create a new instance of the handler
-func New(gateway gateway.AuthorGateway) *Handler {
+func New(gateway gateway.AuthorGateway, kafkaUri string) *Handler {
 	return &Handler{
-		gateway: gateway,
+		gateway:  gateway,
+		kafkaUri: kafkaUri,
 	}
 }
 
@@ -71,57 +76,69 @@ func (h *Handler) GetAuthor(ctx echo.Context) error {
 
 // Create a new author
 func (h *Handler) CreateAuthor(ctx echo.Context) error {
-	return ctx.NoContent(http.StatusNotImplemented)
+	topicName := "createAuthor"
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+	if err != nil {
+		log.Fatalf("Failed to create producer: %s\n", err)
+	}
+	defer producer.Close()
 
-	// author := new(models.Author)
+	author := new(models.Author)
 
-	// if err := ctx.Bind(author); err != nil {
-	// 	return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": "could not parse body"})
-	// }
+	if err := ctx.Bind(author); err != nil {
+		return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": "could not parse body"})
+	}
 
-	// author, err := h.gateway.CreateAuthor(ctx.Request().Context(), author)
+	encodedEvent, err := json.Marshal(models.CreateAuthorEvent{
+		Name:        author.Name,
+		DateOfBirth: author.DateOfBirth,
+	})
 
-	// if err != nil {
-	// 	if e, ok := status.FromError(err); ok {
-	// 		switch e.Code() {
-	// 		case codes.NotFound:
-	// 			return ctx.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
-	// 		default:
-	// 			log.Printf("CreateAuthor failed: Err: %v\n", err)
-	// 			return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
-	// 		}
-	// 	}
+	if err != nil {
+		return err
+	}
 
-	// 	log.Printf("not able to parse error returned %v", err)
+	message := &kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topicName, Partition: kafka.PartitionAny},
+		Value:          encodedEvent,
+	}
 
-	// 	return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-	// }
-	// return ctx.JSON(http.StatusOK, author)
+	if err := producer.Produce(message, nil); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+	}
+
+	producer.Flush(int((1 * time.Second).Milliseconds()))
+
+	return ctx.NoContent(http.StatusCreated)
 
 }
 
 // Delete an author by its id
 func (h *Handler) DeleteAuthor(ctx echo.Context) error {
-	//id := ctx.Param("id")
+	id := ctx.Param("id")
 
-	return ctx.NoContent(http.StatusNotImplemented)
-	// err := h.gateway.DeleteAuthor(ctx.Request().Context(), id)
+	topicName := "deleteAuthor"
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+	if err != nil {
+		log.Fatalf("Failed to create producer: %s\n", err)
+	}
+	defer producer.Close()
 
-	// if err != nil {
-	// 	if e, ok := status.FromError(err); ok {
-	// 		switch e.Code() {
-	// 		case codes.NotFound:
-	// 			return ctx.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
-	// 		default:
-	// 			log.Printf("DeleteAuthor failed: Err: %v\n", err)
-	// 			return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
-	// 		}
-	// 	}
+	encodedEvent, err := json.Marshal(models.DeleteAuthorEvent{ID: id})
+	if err != nil {
+		return err
+	}
 
-	// 	log.Printf("not able to parse error returned %v", err)
+	message := &kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topicName, Partition: kafka.PartitionAny},
+		Value:          encodedEvent,
+	}
 
-	// 	return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-	// }
+	if err := producer.Produce(message, nil); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+	}
 
-	//return ctx.NoContent(http.StatusOK)
+	producer.Flush(int((1 * time.Second).Milliseconds()))
+
+	return ctx.NoContent(http.StatusNoContent)
 }

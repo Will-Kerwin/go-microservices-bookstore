@@ -27,6 +27,7 @@ func main() {
 
 	// register with consul
 	registryUri := os.Getenv("CONSUL_URI")
+	kafkaUri := os.Getenv("KAFKA_URI")
 	regisrty, err := discovery.NewRegistry(registryUri)
 
 	if err != nil {
@@ -73,9 +74,12 @@ func main() {
 	}
 
 	log.Println("Connected to mongodb")
+
 	// load repo and handler
 	authorRepository := db.New(client)
-	authorHandler := author.New(authorRepository)
+	authorHandler := author.New(authorRepository, kafkaUri, serviceName)
+
+	authorHandler.HandleIngestors(ctx)
 
 	// create grpc listener
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
