@@ -10,6 +10,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	authorGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/author"
+	bookGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/book"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/author"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/book"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/discovery"
@@ -58,10 +59,10 @@ func main() {
 
 	// setup grpc gateways
 	authorGateway := authorGateway.New(*regisrty)
-
+	bookGateway := bookGateway.New(*regisrty)
 	// setup handlers
 	authorHandler := author.New(authorGateway)
-	bookHandler := book.New()
+	bookHandler := book.New(bookGateway)
 
 	// init handlers
 	authorHandler.Register(router)

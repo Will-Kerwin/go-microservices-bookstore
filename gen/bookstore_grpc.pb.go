@@ -19,10 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	AuthorService_GetAuthors_FullMethodName   = "/AuthorService/GetAuthors"
-	AuthorService_GetAuthor_FullMethodName    = "/AuthorService/GetAuthor"
-	AuthorService_CreateAuthor_FullMethodName = "/AuthorService/CreateAuthor"
-	AuthorService_DeleteAuthor_FullMethodName = "/AuthorService/DeleteAuthor"
+	AuthorService_GetAuthors_FullMethodName = "/AuthorService/GetAuthors"
+	AuthorService_GetAuthor_FullMethodName  = "/AuthorService/GetAuthor"
 )
 
 // AuthorServiceClient is the client API for AuthorService service.
@@ -31,8 +29,6 @@ const (
 type AuthorServiceClient interface {
 	GetAuthors(ctx context.Context, in *GetAuthorsRequest, opts ...grpc.CallOption) (*GetAuthorsResponse, error)
 	GetAuthor(ctx context.Context, in *GetAuthorRequest, opts ...grpc.CallOption) (*GetAuthorResponse, error)
-	CreateAuthor(ctx context.Context, in *CreateAuthorRequest, opts ...grpc.CallOption) (*CreateAuthorResponse, error)
-	DeleteAuthor(ctx context.Context, in *DeleteAuthorRequest, opts ...grpc.CallOption) (*DeleteAuthorResponse, error)
 }
 
 type authorServiceClient struct {
@@ -63,34 +59,12 @@ func (c *authorServiceClient) GetAuthor(ctx context.Context, in *GetAuthorReques
 	return out, nil
 }
 
-func (c *authorServiceClient) CreateAuthor(ctx context.Context, in *CreateAuthorRequest, opts ...grpc.CallOption) (*CreateAuthorResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateAuthorResponse)
-	err := c.cc.Invoke(ctx, AuthorService_CreateAuthor_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authorServiceClient) DeleteAuthor(ctx context.Context, in *DeleteAuthorRequest, opts ...grpc.CallOption) (*DeleteAuthorResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteAuthorResponse)
-	err := c.cc.Invoke(ctx, AuthorService_DeleteAuthor_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthorServiceServer is the server API for AuthorService service.
 // All implementations must embed UnimplementedAuthorServiceServer
 // for forward compatibility
 type AuthorServiceServer interface {
 	GetAuthors(context.Context, *GetAuthorsRequest) (*GetAuthorsResponse, error)
 	GetAuthor(context.Context, *GetAuthorRequest) (*GetAuthorResponse, error)
-	CreateAuthor(context.Context, *CreateAuthorRequest) (*CreateAuthorResponse, error)
-	DeleteAuthor(context.Context, *DeleteAuthorRequest) (*DeleteAuthorResponse, error)
 	mustEmbedUnimplementedAuthorServiceServer()
 }
 
@@ -103,12 +77,6 @@ func (UnimplementedAuthorServiceServer) GetAuthors(context.Context, *GetAuthorsR
 }
 func (UnimplementedAuthorServiceServer) GetAuthor(context.Context, *GetAuthorRequest) (*GetAuthorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAuthor not implemented")
-}
-func (UnimplementedAuthorServiceServer) CreateAuthor(context.Context, *CreateAuthorRequest) (*CreateAuthorResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateAuthor not implemented")
-}
-func (UnimplementedAuthorServiceServer) DeleteAuthor(context.Context, *DeleteAuthorRequest) (*DeleteAuthorResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteAuthor not implemented")
 }
 func (UnimplementedAuthorServiceServer) mustEmbedUnimplementedAuthorServiceServer() {}
 
@@ -159,42 +127,6 @@ func _AuthorService_GetAuthor_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthorService_CreateAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateAuthorRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthorServiceServer).CreateAuthor(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthorService_CreateAuthor_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthorServiceServer).CreateAuthor(ctx, req.(*CreateAuthorRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthorService_DeleteAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteAuthorRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthorServiceServer).DeleteAuthor(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthorService_DeleteAuthor_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthorServiceServer).DeleteAuthor(ctx, req.(*DeleteAuthorRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthorService_ServiceDesc is the grpc.ServiceDesc for AuthorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -210,13 +142,134 @@ var AuthorService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetAuthor",
 			Handler:    _AuthorService_GetAuthor_Handler,
 		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "bookstore.proto",
+}
+
+const (
+	BookService_GetBooks_FullMethodName = "/BookService/GetBooks"
+	BookService_GetBook_FullMethodName  = "/BookService/GetBook"
+)
+
+// BookServiceClient is the client API for BookService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type BookServiceClient interface {
+	GetBooks(ctx context.Context, in *GetBooksRequest, opts ...grpc.CallOption) (*GetBooksResponse, error)
+	GetBook(ctx context.Context, in *GetBookRequest, opts ...grpc.CallOption) (*GetBookResponse, error)
+}
+
+type bookServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewBookServiceClient(cc grpc.ClientConnInterface) BookServiceClient {
+	return &bookServiceClient{cc}
+}
+
+func (c *bookServiceClient) GetBooks(ctx context.Context, in *GetBooksRequest, opts ...grpc.CallOption) (*GetBooksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBooksResponse)
+	err := c.cc.Invoke(ctx, BookService_GetBooks_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookServiceClient) GetBook(ctx context.Context, in *GetBookRequest, opts ...grpc.CallOption) (*GetBookResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBookResponse)
+	err := c.cc.Invoke(ctx, BookService_GetBook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// BookServiceServer is the server API for BookService service.
+// All implementations must embed UnimplementedBookServiceServer
+// for forward compatibility
+type BookServiceServer interface {
+	GetBooks(context.Context, *GetBooksRequest) (*GetBooksResponse, error)
+	GetBook(context.Context, *GetBookRequest) (*GetBookResponse, error)
+	mustEmbedUnimplementedBookServiceServer()
+}
+
+// UnimplementedBookServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedBookServiceServer struct {
+}
+
+func (UnimplementedBookServiceServer) GetBooks(context.Context, *GetBooksRequest) (*GetBooksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBooks not implemented")
+}
+func (UnimplementedBookServiceServer) GetBook(context.Context, *GetBookRequest) (*GetBookResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBook not implemented")
+}
+func (UnimplementedBookServiceServer) mustEmbedUnimplementedBookServiceServer() {}
+
+// UnsafeBookServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BookServiceServer will
+// result in compilation errors.
+type UnsafeBookServiceServer interface {
+	mustEmbedUnimplementedBookServiceServer()
+}
+
+func RegisterBookServiceServer(s grpc.ServiceRegistrar, srv BookServiceServer) {
+	s.RegisterService(&BookService_ServiceDesc, srv)
+}
+
+func _BookService_GetBooks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBooksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookServiceServer).GetBooks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookService_GetBooks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookServiceServer).GetBooks(ctx, req.(*GetBooksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookService_GetBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookServiceServer).GetBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BookService_GetBook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookServiceServer).GetBook(ctx, req.(*GetBookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// BookService_ServiceDesc is the grpc.ServiceDesc for BookService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var BookService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "BookService",
+	HandlerType: (*BookServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateAuthor",
-			Handler:    _AuthorService_CreateAuthor_Handler,
+			MethodName: "GetBooks",
+			Handler:    _BookService_GetBooks_Handler,
 		},
 		{
-			MethodName: "DeleteAuthor",
-			Handler:    _AuthorService_DeleteAuthor_Handler,
+			MethodName: "GetBook",
+			Handler:    _BookService_GetBook_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

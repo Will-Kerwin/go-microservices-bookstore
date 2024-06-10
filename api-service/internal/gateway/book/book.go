@@ -1,4 +1,4 @@
-package author
+package book
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func New(regisrty discovery.Registry) *Gateway {
 	}
 }
 
-func (g *Gateway) Get(ctx context.Context) ([]*models.Author, error) {
+func (g *Gateway) Get(ctx context.Context, title string, authorId string, genre string) ([]*models.Book, error) {
 	conn, err := grpcutil.ServiceConnection(ctx, "books", g.registry)
 
 	if err != nil {
@@ -27,17 +27,17 @@ func (g *Gateway) Get(ctx context.Context) ([]*models.Author, error) {
 	}
 
 	defer conn.Close()
-	client := gen.NewAuthorServiceClient(conn)
-	resp, err := client.GetAuthors(ctx, &gen.GetAuthorsRequest{})
+	client := gen.NewBookServiceClient(conn)
+	resp, err := client.GetBooks(ctx, &gen.GetBooksRequest{})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return models.ProtosToAuthors(resp.Authors), err
+	return models.ProtosToBooks(resp.Books), err
 }
 
-func (g *Gateway) GetById(ctx context.Context, id string) (*models.Author, error) {
+func (g *Gateway) GetById(ctx context.Context, id string) (*models.Book, error) {
 	conn, err := grpcutil.ServiceConnection(ctx, "books", g.registry)
 
 	if err != nil {
@@ -45,8 +45,8 @@ func (g *Gateway) GetById(ctx context.Context, id string) (*models.Author, error
 	}
 
 	defer conn.Close()
-	client := gen.NewAuthorServiceClient(conn)
-	resp, err := client.GetAuthor(ctx, &gen.GetAuthorRequest{
+	client := gen.NewBookServiceClient(conn)
+	resp, err := client.GetBook(ctx, &gen.GetBookRequest{
 		Id: id,
 	})
 
@@ -54,5 +54,5 @@ func (g *Gateway) GetById(ctx context.Context, id string) (*models.Author, error
 		return nil, err
 	}
 
-	return models.ProtoToAuthor(resp.Author), err
+	return models.ProtoToBook(resp.Book), err
 }

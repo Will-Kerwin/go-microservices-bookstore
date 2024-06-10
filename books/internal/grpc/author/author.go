@@ -3,7 +3,6 @@ package author
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/will-kerwin/go-microservice-bookstore/books/internal/db"
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
@@ -63,6 +62,7 @@ func (h *Handler) GetAuthor(ctx context.Context, req *gen.GetAuthorRequest) (*ge
 	return &gen.GetAuthorResponse{Author: models.AuthorToProto(author)}, nil
 }
 
+/*
 func (h *Handler) CreateAuthor(ctx context.Context, req *gen.CreateAuthorRequest) (*gen.CreateAuthorResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "req was nil")
@@ -107,3 +107,4 @@ func (h *Handler) DeleteAuthor(ctx context.Context, req *gen.DeleteAuthorRequest
 
 	return &gen.DeleteAuthorResponse{}, nil
 }
+*/
