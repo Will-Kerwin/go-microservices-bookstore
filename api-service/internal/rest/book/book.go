@@ -25,6 +25,10 @@ func New(gateway gateway.BookGateway, kafkaUri string) *Handler {
 	return &Handler{gateway: gateway, kafkaUri: kafkaUri}
 }
 
+func (h *Handler) newProducer() (*kafka.Producer, error) {
+	return kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+}
+
 // Register book endpoints
 func (h *Handler) Register(r *echo.Echo) {
 	r.GET("/books", h.GetBooks)
@@ -111,9 +115,9 @@ func (h *Handler) GetBook(ctx echo.Context) error {
 func (h *Handler) CreateBook(ctx echo.Context) error {
 
 	topicName := "createBook"
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+	producer, err := h.newProducer()
 	if err != nil {
-		log.Fatalf("Failed to create producer: %s\n", err)
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 	defer producer.Close()
 
@@ -164,9 +168,9 @@ func (h *Handler) CreateBook(ctx echo.Context) error {
 func (h *Handler) UpdateBook(ctx echo.Context) error {
 	id := ctx.Param("id")
 	topicName := "updateBook"
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+	producer, err := h.newProducer()
 	if err != nil {
-		log.Fatalf("Failed to create producer: %s\n", err)
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 	defer producer.Close()
 
@@ -221,9 +225,9 @@ func (h *Handler) DeleteBook(ctx echo.Context) error {
 	id := ctx.Param("id")
 
 	topicName := "deleteBook"
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+	producer, err := h.newProducer()
 	if err != nil {
-		log.Fatalf("Failed to create producer: %s\n", err)
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 	defer producer.Close()
 

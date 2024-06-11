@@ -29,6 +29,10 @@ func New(gateway gateway.AuthorGateway, kafkaUri string) *Handler {
 	}
 }
 
+func (h *Handler) newProducer() (*kafka.Producer, error) {
+	return kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+}
+
 // Register endpoints for the handler
 func (h *Handler) Register(r *echo.Echo) {
 	r.GET("/authors", h.GetAuthors)
@@ -106,9 +110,9 @@ func (h *Handler) GetAuthor(ctx echo.Context) error {
 // @Router /authors [post]
 func (h *Handler) CreateAuthor(ctx echo.Context) error {
 	topicName := "createAuthor"
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+	producer, err := h.newProducer()
 	if err != nil {
-		log.Fatalf("Failed to create producer: %s\n", err)
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 	defer producer.Close()
 
@@ -157,9 +161,9 @@ func (h *Handler) DeleteAuthor(ctx echo.Context) error {
 	id := ctx.Param("id")
 
 	topicName := "deleteAuthor"
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
+	producer, err := h.newProducer()
 	if err != nil {
-		log.Fatalf("Failed to create producer: %s\n", err)
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 	defer producer.Close()
 

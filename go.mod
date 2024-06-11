@@ -3,6 +3,7 @@ module github.com/will-kerwin/go-microservice-bookstore
 go 1.22.4
 
 require (
+	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/hashicorp/consul/api v1.29.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/swaggo/echo-swagger v1.4.1
@@ -31,7 +32,6 @@ require (
 
 require (
 	github.com/armon/go-metrics v0.4.1 // indirect
-	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect

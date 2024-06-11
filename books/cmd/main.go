@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/will-kerwin/go-microservice-bookstore/books/internal/db"
@@ -17,15 +17,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const serviceName string = "books"
 
 func main() {
-	var port int
-	flag.IntVar(&port, "port", 8081, "Port to listen on")
-	flag.Parse()
 
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		panic(err)
+	}
 	// register with consul
 	registryUri := os.Getenv("CONSUL_URI")
 	kafkaUri := os.Getenv("KAFKA_URI")
@@ -38,7 +40,7 @@ func main() {
 	ctx := context.Background()
 	instanceID := discovery.GenerateInstanceID(serviceName)
 
-	if err := regisrty.Register(ctx, instanceID, serviceName, fmt.Sprintf("localhost:%d", port)); err != nil {
+	if err := regisrty.Register(ctx, instanceID, serviceName, fmt.Sprintf("%s:%d", serviceName, port)); err != nil {
 		panic(err)
 	}
 
@@ -88,13 +90,13 @@ func main() {
 	bookHandler.HandleIngestors(ctx)
 
 	// create grpc listener
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", serviceName, port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
 	// create grpc server and listen
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 
 	gen.RegisterAuthorServiceServer(grpcServer, authorHandler)
 	gen.RegisterBookServiceServer(grpcServer, bookHandler)

@@ -18,13 +18,13 @@ COPY ../go.sum ./
 RUN go mod download
 RUN go mod verify
 
-COPY ./books ./books
+COPY ./api-service ./api-service
 COPY ../pkg ./pkg
 COPY ../gen ./gen
 COPY ../internal ./internal
 COPY ../docs ./docs
 
-RUN go build -tags musl -ldflags "-s -w -X main.Version=$GIT_TAG_NAME" -o /bin/service ./books/cmd
+RUN go build -tags musl -ldflags "-s -w -X main.Version=$GIT_TAG_NAME" -o /bin/service ./api-service/cmd
 
 FROM alpine:latest as final
 WORKDIR /app

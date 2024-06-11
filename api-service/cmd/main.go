@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -33,14 +33,15 @@ const serviceName = "api"
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:8081
+// @host api-service:8080
 // @BasePath /
 // @schemes http
 func main() {
 
-	var port int
-	flag.IntVar(&port, "port", 8081, "Port to listen on")
-	flag.Parse()
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		panic(err)
+	}
 
 	// register with consul
 	registryUri := os.Getenv("CONSUL_URI")
@@ -54,7 +55,7 @@ func main() {
 	ctx := context.Background()
 	instanceID := discovery.GenerateInstanceID(serviceName)
 
-	if err := regisrty.Register(ctx, instanceID, serviceName, fmt.Sprintf("localhost:%d", port)); err != nil {
+	if err := regisrty.Register(ctx, instanceID, serviceName, fmt.Sprintf("%s:%d", serviceName, port)); err != nil {
 		panic(err)
 	}
 
