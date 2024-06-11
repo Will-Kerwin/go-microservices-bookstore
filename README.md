@@ -27,8 +27,8 @@
 - [ ] Persistant storage
   - mongodb - i use mongo db to store the data
   - redis
-- [ ] Containerised deployment
-  - docker
+- [x] Containerised deployment
+  - docker - Containersied the api and book services
   - potential for kubernetes
 
 ### How i will implement this
