@@ -30,6 +30,10 @@
 - [x] Containerised deployment
   - docker - Containersied the api and book services
   - potential for kubernetes
+- [x] API Practises
+  - Pagination
+  - Cache Aside strategy
+  - Swagger Documentation
 
 ### How i will implement this
 
