@@ -12,7 +12,10 @@
 
 ### Core Requirements
 
-- [ ] Authentication and Authorization
+- [x] Authentication and Authorization
+  - I have implemented basic JWT authentication using a mongodb collection to store users.
+  - To ensure security i have used bcrypt to hash passwords in the database
+  - I have split my route handlers to a protected group to ensure they cannot be access by unauthenticated users. I have done this by using echo middleware
 - [x] Synchronous communication
   - RESTful - To complete this i've created a api service in which all front end requests will be made RESTfully. I have also implemented swagger to ensure production standard documentation
   - gRPC - I use gRPC to manage service to service communication this includes communication from the api service to backend services
