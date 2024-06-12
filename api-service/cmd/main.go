@@ -8,13 +8,17 @@ import (
 	"strconv"
 	"time"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	authGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/auth"
 	authorGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/author"
 	bookGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/book"
+	authHandler "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/auth"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/author"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/book"
+	"github.com/will-kerwin/go-microservice-bookstore/api-service/pkg/auth"
 	_ "github.com/will-kerwin/go-microservice-bookstore/docs" // Import the docs
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/discovery"
 )
@@ -80,15 +84,22 @@ func main() {
 	// setup grpc gateways
 	authorGateway := authorGateway.New(*regisrty)
 	bookGateway := bookGateway.New(*regisrty)
+	authGateway := authGateway.New(*regisrty)
 
 	// setup handlers
 	authorHandler := author.New(authorGateway, kafkaUri)
 	bookHandler := book.New(bookGateway, kafkaUri)
+	authHandler := authHandler.New(authGateway, kafkaUri)
 
 	// init handlers
-	authorHandler.Register(router)
-	bookHandler.Register(router)
+	authHandler.Register(router)
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	authRouter := router.Group("")
+	authRouter.Use(echojwt.WithConfig(auth.JwtConfig))
+
+	authorHandler.Register(authRouter)
+	bookHandler.Register(authRouter)
 
 	// middleware
 

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/will-kerwin/go-microservice-bookstore/books/internal/db"
-	"github.com/will-kerwin/go-microservice-bookstore/books/internal/ingester"
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/ingester"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"

@@ -34,7 +34,7 @@ func (h *Handler) newProducer() (*kafka.Producer, error) {
 }
 
 // Register endpoints for the handler
-func (h *Handler) Register(r *echo.Echo) {
+func (h *Handler) Register(r *echo.Group) {
 	r.GET("/authors", h.GetAuthors)
 	r.GET("/authors/:id", h.GetAuthor)
 	r.POST("/authors", h.CreateAuthor)
@@ -142,7 +142,7 @@ func (h *Handler) CreateAuthor(ctx echo.Context) error {
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
 
-	return ctx.NoContent(http.StatusCreated)
+	return ctx.NoContent(http.StatusAccepted)
 
 }
 

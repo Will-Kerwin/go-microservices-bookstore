@@ -63,3 +63,45 @@ message GetBookRequest {
 message GetBookResponse {
     Book book = 1;
 }
+
+// -- User Service --
+
+message User {
+    string id = 1;
+    string username = 2;
+    string email = 3;
+    string first_name = 4;
+    string last_name = 5;
+}
+
+service UserService {
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+    rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
+    rpc ValidateUsernameUnique(ValidateUsernameUniqueRequest) returns (ValidateUsernameUniqueResponse);
+}
+
+message GetUserRequest {
+    string id = 1;
+}
+
+message GetUserResponse {
+    User user = 1;
+}
+
+message LoginUserRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginUserResponse {
+    string username = 1;
+    string email = 2;
+}
+
+message ValidateUsernameUniqueRequest {
+    string username = 1;
+}
+
+message ValidateUsernameUniqueResponse {
+    bool is_valid = 1;
+}

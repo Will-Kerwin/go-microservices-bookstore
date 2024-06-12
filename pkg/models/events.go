@@ -35,3 +35,12 @@ type UpdateBookEventData struct {
 	ImageUrl string `json:"imageUrl,omitempty"`
 	Genre    string `json:"genre,omitempty"`
 }
+
+type CreateUserEvent struct {
+	ID        string `json:"_id,omitempty"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
+	FirstName string `json:"firstName,omitempty"`
+	LastName  string `json:"lastName,omitempty"`
+}

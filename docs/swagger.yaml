@@ -7,7 +7,7 @@ definitions:
     properties:
       _id:
         type: string
-      age:
+      dateOfBirth:
         type: string
       name:
         type: string
@@ -27,7 +27,25 @@ definitions:
       title:
         type: string
     type: object
-host: localhost:8081
+  models.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  models.User:
+    properties:
+      _id:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      username:
+        type: string
+    type: object
+host: api-service:8080
 info:
   contact:
     email: support@swagger.io
@@ -41,6 +59,77 @@ info:
   title: Go Microservice Bookstore API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: login to the api
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Login
+      tags:
+      - auth
+  /auth/users:
+    post:
+      consumes:
+      - application/json
+      description: create a new user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: CreateUser
+      tags:
+      - auth
+  /auth/users/{id}:
+    get:
+      consumes:
+      - applicaiton/json
+      description: get the user by id from database.
+      parameters:
+      - description: id of the user
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/models.ApiErrorResponse'
+      summary: Get user by its object id in hex format.
+      tags:
+      - auth
   /authors:
     get:
       consumes:

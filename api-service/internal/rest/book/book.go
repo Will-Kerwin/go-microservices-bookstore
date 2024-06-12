@@ -30,7 +30,7 @@ func (h *Handler) newProducer() (*kafka.Producer, error) {
 }
 
 // Register book endpoints
-func (h *Handler) Register(r *echo.Echo) {
+func (h *Handler) Register(r *echo.Group) {
 	r.GET("/books", h.GetBooks)
 	r.GET("/books/:id", h.GetBook)
 	r.POST("/books", h.CreateBook)
@@ -150,7 +150,7 @@ func (h *Handler) CreateBook(ctx echo.Context) error {
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
 
-	return ctx.NoContent(http.StatusCreated)
+	return ctx.NoContent(http.StatusAccepted)
 }
 
 // UpdateBook godoc
@@ -247,5 +247,5 @@ func (h *Handler) DeleteBook(ctx echo.Context) error {
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
 
-	return ctx.NoContent(http.StatusNoContent)
+	return ctx.NoContent(http.StatusAccepted)
 }
