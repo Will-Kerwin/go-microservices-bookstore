@@ -4,15 +4,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
-	"regexp"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
-	"github.com/will-kerwin/go-microservice-bookstore/api-service/pkg/auth"
+	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/middleware"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,8 +20,6 @@ type Handler struct {
 	kafkaUri string
 }
 
-var emailRegex *regexp.Regexp = regexp.MustCompile(`^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$`)
-
 func New(authGateway gateway.AuthGateway, kafkaUri string) *Handler {
 	return &Handler{
 		gateway:  authGateway,
@@ -33,29 +28,21 @@ func New(authGateway gateway.AuthGateway, kafkaUri string) *Handler {
 }
 
 func (h *Handler) Register(r *echo.Echo) {
-	r.GET("/auth/users/:id", h.GetUser)
 	r.POST("/auth/login", h.Login)
 	r.POST("/auth/users", h.CreateUser)
+
+	userSpecificGroup := r.Group("/auth/users/:id")
+
+	userSpecificGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return middleware.UseAdminOrSameUserAuthMiddleware
+	})
+
+	userSpecificGroup.GET("/auth/users/:id", h.GetUser)
+	userSpecificGroup.PATCH("/auth/users/:id", h.UpdateUser)
 }
 
 func (h *Handler) newProducer() (*kafka.Producer, error) {
 	return kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": h.kafkaUri})
-}
-
-func (h *Handler) buildJwt(username string, email string) (string, error) {
-	secret := os.Getenv("JWT_SECRET")
-	claims := &auth.JwtCustomClaims{
-		Username: username,
-		Email:    email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	return token.SignedString([]byte(secret))
-
 }
 
 // Login godoc
@@ -82,7 +69,7 @@ func (h *Handler) Login(ctx echo.Context) error {
 		}
 	}
 
-	jwt, err := h.buildJwt(user.Username, user.Email)
+	jwt, err := models.BuildJwt(user.Username, user.Email)
 
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
@@ -129,7 +116,7 @@ func (h *Handler) GetUser(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, res)
 }
 
-// Login godoc
+// CreateUser godoc
 // @Summary CreateUser
 // @Description create a new user
 // @Tags auth
@@ -168,7 +155,7 @@ func (h *Handler) CreateUser(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "username already exists"})
 	}
 
-	if createReq.Email == "" || !emailRegex.MatchString(createReq.Email) {
+	if createReq.Email == "" || !models.EmailRegex.MatchString(createReq.Email) {
 		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "email is invalid"})
 	}
 
@@ -190,4 +177,17 @@ func (h *Handler) CreateUser(ctx echo.Context) error {
 	producer.Flush(int((1 * time.Second).Milliseconds()))
 
 	return ctx.NoContent(http.StatusCreated)
+}
+
+// UpdateUser godoc
+// @Summary UpdateUser
+// @Description Update an existing user
+// @Tags auth
+// @Accept application/json
+// @Produce json
+// @Success 200 {object} models.User
+// @Failure 401 {object} models.ApiErrorResponse
+// @Router /auth/users/:id [patch]
+func (h *Handler) UpdateUser(ctx echo.Context) error {
+	return ctx.NoContent(http.StatusNotImplemented)
 }

@@ -9,15 +9,9 @@ import (
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
 )
 
-type JwtCustomClaims struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	jwt.RegisteredClaims
-}
-
 var JwtConfig echojwt.Config = echojwt.Config{
 	NewClaimsFunc: func(c echo.Context) jwt.Claims {
-		return new(JwtCustomClaims)
+		return new(models.JwtCustomClaims)
 	},
 	SigningKey: []byte("secret"),
 	ErrorHandler: func(c echo.Context, err error) error {
