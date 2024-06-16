@@ -51,19 +51,13 @@ All of these will be behind a RESTful API which will handle requests.
 ## Install
 
 ```sh
-make build-all
+go mod tidy
 ```
 
 ## Usage
 
 ```sh
-make dev
-```
-
-## Run tests
-
-```sh
-make test
+docker compose up -d --build
 ```
 
 ## Author
