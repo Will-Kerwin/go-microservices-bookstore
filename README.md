@@ -42,9 +42,9 @@
 
 The bookstore will be comprised of three services
 
-- Books service to manage CRUD book operations and data
-- Reviews service to manage reviews and raitings for a book
-- Sales service to manage prices and sales of a book
+- [x] Books service to manage CRUD book and author operations
+- [ ] Reviews service to manage reviews and raitings for a book
+- [ ] Sales service to manage prices and sales of a book
 
 All of these will be behind a RESTful API which will handle requests.
 
