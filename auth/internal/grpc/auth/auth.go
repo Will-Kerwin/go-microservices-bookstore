@@ -10,6 +10,7 @@ import (
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/ingester"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	userModels "github.com/will-kerwin/go-microservice-bookstore/pkg/models/user"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -111,7 +112,7 @@ func (h *Handler) GetUser(ctx context.Context, req *gen.GetUserRequest) (*gen.Ge
 		}
 	}
 
-	return &gen.GetUserResponse{User: models.UserToProto(user)}, nil
+	return &gen.GetUserResponse{User: userModels.UserToProto(user)}, nil
 }
 
 func (h *Handler) CreateUser(ctx context.Context, req *models.CreateUserEvent) error {

@@ -33,9 +33,7 @@ func (h *Handler) Register(r *echo.Echo) {
 
 	userSpecificGroup := r.Group("/auth/users/:id")
 
-	userSpecificGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return middleware.UseAdminOrSameUserAuthMiddleware
-	})
+	userSpecificGroup.Use(middleware.UseAdminOrSameUserAuthMiddleware)
 
 	userSpecificGroup.GET("/auth/users/:id", h.GetUser)
 	userSpecificGroup.PATCH("/auth/users/:id", h.UpdateUser)

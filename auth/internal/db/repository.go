@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/user"
 )
 
 type AuthRepository interface {
-	Add(ctx context.Context, user *models.CreateUserEvent) (*models.User, error)
-	GetById(ctx context.Context, id string) (*models.User, error)
-	Authenticate(ctx context.Context, username string, password string) (*models.User, error)
+	Add(ctx context.Context, user *models.CreateUserEvent) (*user.User, error)
+	GetById(ctx context.Context, id string) (*user.User, error)
+	Authenticate(ctx context.Context, username string, password string) (*user.User, error)
 	ValidateUsernameUnique(ctx context.Context, username string) (bool, error)
 }

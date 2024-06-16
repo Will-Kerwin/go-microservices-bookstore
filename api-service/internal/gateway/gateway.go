@@ -5,6 +5,7 @@ import (
 
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/user"
 )
 
 type AuthorGateway interface {
@@ -19,6 +20,6 @@ type BookGateway interface {
 
 type AuthGateway interface {
 	LoginUser(ctx context.Context, username string, password string) (*gen.LoginUserResponse, error)
-	GetUser(ctx context.Context, id string) (*models.User, error)
+	GetUser(ctx context.Context, id string) (*user.User, error)
 	ValidateUsernameUnique(ctx context.Context, username string) (bool, error)
 }

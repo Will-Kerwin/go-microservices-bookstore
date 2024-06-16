@@ -6,6 +6,7 @@ import (
 
 	authModels "github.com/will-kerwin/go-microservice-bookstore/auth/pkg/models"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -37,7 +38,7 @@ func (r *MongoDbAuthRepository) getCollection() *mongo.Collection {
 	return r.client.Database(dbName).Collection("users")
 }
 
-func (r *MongoDbAuthRepository) Add(ctx context.Context, user *models.CreateUserEvent) (*models.User, error) {
+func (r *MongoDbAuthRepository) Add(ctx context.Context, user *models.CreateUserEvent) (*user.User, error) {
 
 	hash, err := hashPassword(user.Password)
 
@@ -68,7 +69,7 @@ func (r *MongoDbAuthRepository) Add(ctx context.Context, user *models.CreateUser
 
 }
 
-func (r *MongoDbAuthRepository) GetById(ctx context.Context, id string) (*models.User, error) {
+func (r *MongoDbAuthRepository) GetById(ctx context.Context, id string) (*user.User, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -89,7 +90,7 @@ func (r *MongoDbAuthRepository) GetById(ctx context.Context, id string) (*models
 	return userDoc.ToModel(), nil
 }
 
-func (r *MongoDbAuthRepository) Authenticate(ctx context.Context, username string, password string) (*models.User, error) {
+func (r *MongoDbAuthRepository) Authenticate(ctx context.Context, username string, password string) (*user.User, error) {
 	var userDoc authModels.UserDocument
 	collection := r.getCollection()
 

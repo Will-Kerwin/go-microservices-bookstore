@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/user"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,8 +14,8 @@ type UserDocument struct {
 	LastName  string             `json:"lastName,omitempty"`
 }
 
-func (d *UserDocument) ToModel() *models.User {
-	return &models.User{
+func (d *UserDocument) ToModel() *user.User {
+	return &user.User{
 		ID:        d.ID.Hex(),
 		Username:  d.Username,
 		Email:     d.Email,

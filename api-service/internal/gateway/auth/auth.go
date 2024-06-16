@@ -6,7 +6,7 @@ import (
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
 	"github.com/will-kerwin/go-microservice-bookstore/internal/grpcutil"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/discovery"
-	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/user"
 )
 
 type Gateway struct {
@@ -41,7 +41,7 @@ func (g *Gateway) LoginUser(ctx context.Context, username string, password strin
 	return resp, err
 }
 
-func (g *Gateway) GetUser(ctx context.Context, id string) (*models.User, error) {
+func (g *Gateway) GetUser(ctx context.Context, id string) (*user.User, error) {
 	conn, err := grpcutil.ServiceConnection(ctx, "auth", g.registry)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (g *Gateway) GetUser(ctx context.Context, id string) (*models.User, error) 
 		return nil, err
 	}
 
-	return models.ProtoToUser(resp.User), err
+	return user.ProtoToUser(resp.User), err
 }
 
 func (g *Gateway) ValidateUsernameUnique(ctx context.Context, username string) (bool, error) {
