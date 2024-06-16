@@ -47,6 +47,7 @@ The bookstore will be comprised of three services
 - [ ] Sales service to manage prices and sales of a book
 
 All of these will be behind a RESTful API which will handle requests.
+All service to service communication will be handled by gRPC
 
 ## Install
 
