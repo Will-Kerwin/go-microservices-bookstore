@@ -1,13 +1,18 @@
 package book
 
 import (
+	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/labstack/echo/v4"
+	"github.com/redis/go-redis/v9"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
@@ -15,15 +20,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const GetBooksBaseKey string = "Books"
+
 // HTTP Handler for book endpoints
 type Handler struct {
 	gateway  gateway.BookGateway
 	kafkaUri string
+	redis    *redis.Client
 }
 
 // Create a new instance of the handler
-func New(gateway gateway.BookGateway, kafkaUri string) *Handler {
-	return &Handler{gateway: gateway, kafkaUri: kafkaUri}
+func New(gateway gateway.BookGateway, redist *redis.Client, kafkaUri string) *Handler {
+	return &Handler{gateway: gateway, kafkaUri: kafkaUri, redis: redist}
 }
 
 func (h *Handler) newProducer() (*kafka.Producer, error) {
@@ -37,6 +45,55 @@ func (h *Handler) Register(r *echo.Group) {
 	r.POST("/books", h.CreateBook)
 	r.PATCH("/books/:id", h.UpdateBook)
 	r.DELETE("/books/:id", h.DeleteBook)
+}
+
+// getBooksKey godoc
+// Get the cache key for books
+func getBooksKey(title string, authorId string, genre string) string {
+	key := GetBooksBaseKey
+
+	if genre != "" {
+		key += fmt.Sprintf(":%s", genre)
+	} else {
+		key += ":"
+	}
+
+	if title != "" {
+		key += fmt.Sprintf(":%s", title)
+	} else {
+		key += ":"
+	}
+
+	if authorId != "" {
+		key += fmt.Sprintf(":%s", authorId)
+	} else {
+		key += ":"
+	}
+
+	key = strings.Trim(key, ":")
+
+	h := sha256.New()
+
+	h.Write([]byte(key))
+
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func (h *Handler) invalidateBookCache(ctx context.Context) {
+	keys, err := h.redis.Keys(ctx, GetBooksBaseKey+"*").Result()
+	if err != nil {
+		return
+	}
+
+	if len(keys) == 0 {
+		return
+	}
+
+	err = h.redis.Del(ctx, keys...).Err()
+
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // GetBooks godoc
@@ -57,10 +114,37 @@ func (h *Handler) GetBooks(ctx echo.Context) error {
 	title := ctx.Param("title")
 	authorId := ctx.Param("authorId")
 
+	key := getBooksKey(title, authorId, genre)
+
+	val, err := h.redis.Get(ctx.Request().Context(), key).Result()
+
+	if err != nil {
+		log.Println("Books Cache Miss")
+		log.Println(err)
+	}
+
+	if val != "" {
+		var books []models.Book
+
+		if err = json.Unmarshal([]byte(val), &books); err == nil {
+			log.Println("Books cache hit")
+			return ctx.JSON(http.StatusOK, books)
+		} else {
+			log.Println(err)
+		}
+	}
+
 	res, err := h.gateway.Get(ctx.Request().Context(), title, authorId, genre)
 
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
+	}
+
+	marshaledRes, err := json.Marshal(res)
+
+	if err == nil {
+		log.Printf("update authors cache")
+		h.redis.Set(ctx.Request().Context(), key, marshaledRes, time.Minute*10).Err()
 	}
 
 	return ctx.JSON(http.StatusOK, res)
@@ -149,6 +233,7 @@ func (h *Handler) CreateBook(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
 	}
 
+	h.invalidateBookCache(ctx.Request().Context())
 	producer.Flush(int((1 * time.Second).Milliseconds()))
 
 	return ctx.NoContent(http.StatusAccepted)
@@ -206,7 +291,7 @@ func (h *Handler) UpdateBook(ctx echo.Context) error {
 	}
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
-
+	h.invalidateBookCache(ctx.Request().Context())
 	return ctx.NoContent(http.StatusAccepted)
 
 }
@@ -247,6 +332,6 @@ func (h *Handler) DeleteBook(ctx echo.Context) error {
 	}
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
-
+	h.invalidateBookCache(ctx.Request().Context())
 	return ctx.NoContent(http.StatusAccepted)
 }

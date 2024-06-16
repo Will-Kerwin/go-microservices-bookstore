@@ -12,4 +12,5 @@ type AuthRepository interface {
 	GetById(ctx context.Context, id string) (*user.User, error)
 	Authenticate(ctx context.Context, username string, password string) (*user.User, error)
 	ValidateUsernameUnique(ctx context.Context, username string) (bool, error)
+	Update(ctx context.Context, id string, updateData *events.UpdateUserEventData) error
 }

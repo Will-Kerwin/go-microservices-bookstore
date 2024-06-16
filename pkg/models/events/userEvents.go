@@ -9,8 +9,13 @@ type CreateUserEvent struct {
 	LastName  string `json:"lastName,omitempty"`
 }
 
-type UpdateUserEvent struct {
-	Username  string `json:"username"`
+type UpdateUserEventData struct {
+	Username  string `json:"username,omitempty"`
 	FirstName string `json:"firstName,omitempty"`
 	LastName  string `json:"lastName,omitempty"`
+}
+
+type UpdateUserEvent struct {
+	ID   string              `json:"id"`
+	Data UpdateUserEventData `json:"data"`
 }

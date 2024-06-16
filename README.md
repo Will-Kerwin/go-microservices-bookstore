@@ -27,9 +27,9 @@
 - [x] Asynchronous communication
   - Messaging i use Kafka to handle all asynchronous requests, this includes:
     - create, update, delete requests
-- [ ] Persistant storage
-  - mongodb - i use mongo db to store the data
-  - redis
+- [x] Persistant storage
+  - mongodb - i use mongo db to store the data for books and authors
+  - redis - I user redis to cache frequently requested data. this inclides invalidating caches when an item is created or updated
 - [x] Containerised deployment
   - docker - Containersied the api and book services
   - potential for kubernetes

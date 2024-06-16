@@ -11,6 +11,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/redis/go-redis/v9"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/auth"
 	authGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/auth"
@@ -50,6 +51,7 @@ func main() {
 	// register with consul
 	registryUri := os.Getenv("CONSUL_URI")
 	kafkaUri := os.Getenv("KAFKA_URI")
+	redisUri := os.Getenv("REDIS_URI")
 	regisrty, err := discovery.NewRegistry(registryUri)
 
 	if err != nil {
@@ -76,6 +78,14 @@ func main() {
 	// deregister on close
 	defer regisrty.Deregister(ctx, instanceID, serviceName)
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     redisUri,
+		Password: "",
+		DB:       0,
+	})
+
+	defer redisClient.Close()
+
 	log.Printf("Starting the %s service at port: %d\n", serviceName, port)
 
 	// setup router
@@ -87,9 +97,9 @@ func main() {
 	authGateway := authGateway.New(*regisrty)
 
 	// setup handlers
-	authorHandler := author.New(authorGateway, kafkaUri)
-	bookHandler := book.New(bookGateway, kafkaUri)
-	authHandler := authHandler.New(authGateway, kafkaUri)
+	authorHandler := author.New(authorGateway, redisClient, kafkaUri)
+	bookHandler := book.New(bookGateway, redisClient, kafkaUri)
+	authHandler := authHandler.New(authGateway, redisClient, kafkaUri)
 
 	// init handlers
 	authHandler.Register(router)

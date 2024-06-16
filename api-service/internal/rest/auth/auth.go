@@ -8,6 +8,7 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/labstack/echo/v4"
+	"github.com/redis/go-redis/v9"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/middleware"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
@@ -19,12 +20,14 @@ import (
 type Handler struct {
 	gateway  gateway.AuthGateway
 	kafkaUri string
+	redis    *redis.Client
 }
 
-func New(authGateway gateway.AuthGateway, kafkaUri string) *Handler {
+func New(authGateway gateway.AuthGateway, redis *redis.Client, kafkaUri string) *Handler {
 	return &Handler{
 		gateway:  authGateway,
 		kafkaUri: kafkaUri,
+		redis:    redis,
 	}
 }
 
@@ -120,6 +123,7 @@ func (h *Handler) GetUser(ctx echo.Context) error {
 // @Description create a new user
 // @Tags auth
 // @Accept application/json
+// @Param  body body models.CreateUserEvent true "user details"
 // @Produce json
 // @Success 200 {object} models.User
 // @Failure 401 {object} models.ApiErrorResponse
@@ -183,10 +187,57 @@ func (h *Handler) CreateUser(ctx echo.Context) error {
 // @Description Update an existing user
 // @Tags auth
 // @Accept application/json
+// @Param  body body models.UpdateUserEvent true "user details"
 // @Produce json
 // @Success 200 {object} models.User
 // @Failure 401 {object} models.ApiErrorResponse
 // @Router /auth/users/:id [patch]
 func (h *Handler) UpdateUser(ctx echo.Context) error {
-	return ctx.NoContent(http.StatusNotImplemented)
+	topicName := "updateUser"
+
+	producer, err := h.newProducer()
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
+	}
+
+	defer producer.Close()
+	createReq := new(events.UpdateUserEvent)
+
+	if err := ctx.Bind(createReq); err != nil {
+		log.Println(err.Error())
+		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "could not parse body"})
+	}
+
+	if createReq.Data.Username == "" {
+		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "email is invalid"})
+	}
+
+	isValid, err := h.gateway.ValidateUsernameUnique(ctx.Request().Context(), createReq.Data.Username)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
+	}
+
+	if !isValid {
+		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "username already exists"})
+	}
+
+	encodedEvent, err := json.Marshal(createReq)
+
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": err.Error()})
+	}
+
+	message := &kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topicName, Partition: kafka.PartitionAny},
+		Value:          encodedEvent,
+	}
+
+	if err := producer.Produce(message, nil); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
+	}
+
+	producer.Flush(int((1 * time.Second).Milliseconds()))
+
+	return ctx.NoContent(http.StatusAccepted)
 }

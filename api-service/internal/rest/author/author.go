@@ -1,6 +1,7 @@
 package author
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/labstack/echo/v4"
+	"github.com/redis/go-redis/v9"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
@@ -16,17 +18,38 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const GetAuthorsBaseKey string = "Authors"
+
 // HTTP Handler for author endpoints
 type Handler struct {
 	gateway  gateway.AuthorGateway
 	kafkaUri string
+	redis    *redis.Client
+}
+
+func (h *Handler) invalidateAuthorCache(ctx context.Context) {
+	keys, err := h.redis.Keys(ctx, GetAuthorsBaseKey+"*").Result()
+	if err != nil {
+		return
+	}
+
+	if len(keys) == 0 {
+		return
+	}
+
+	err = h.redis.Del(ctx, keys...).Err()
+
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // Create a new instance of the handler
-func New(gateway gateway.AuthorGateway, kafkaUri string) *Handler {
+func New(gateway gateway.AuthorGateway, redis *redis.Client, kafkaUri string) *Handler {
 	return &Handler{
 		gateway:  gateway,
 		kafkaUri: kafkaUri,
+		redis:    redis,
 	}
 }
 
@@ -52,10 +75,36 @@ func (h *Handler) Register(r *echo.Group) {
 // @Failure 502 {object} models.ApiErrorResponse
 // @Router /authors [get]
 func (h *Handler) GetAuthors(ctx echo.Context) error {
+
+	val, err := h.redis.Get(ctx.Request().Context(), GetAuthorsBaseKey).Result()
+
+	if err != nil {
+		log.Println("Authors Cache Miss")
+		log.Println(err)
+	}
+
+	if val != "" {
+		var authors []models.Author
+
+		if err = json.Unmarshal([]byte(val), &authors); err == nil {
+			log.Println("Authors cache hit")
+			return ctx.JSON(http.StatusOK, authors)
+		} else {
+			log.Println(err)
+		}
+	}
+
 	res, err := h.gateway.Get(ctx.Request().Context())
 
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, models.ApiErrorResponse{"error": err.Error()})
+	}
+
+	marshaledRes, err := json.Marshal(res)
+
+	if err == nil {
+		log.Printf("update authors cache")
+		h.redis.Set(ctx.Request().Context(), GetAuthorsBaseKey, marshaledRes, time.Minute*10).Err()
 	}
 
 	return ctx.JSON(http.StatusOK, res)
@@ -142,6 +191,7 @@ func (h *Handler) CreateAuthor(ctx echo.Context) error {
 	}
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
+	h.invalidateAuthorCache(ctx.Request().Context())
 
 	return ctx.NoContent(http.StatusAccepted)
 
@@ -183,6 +233,7 @@ func (h *Handler) DeleteAuthor(ctx echo.Context) error {
 	}
 
 	producer.Flush(int((1 * time.Second).Milliseconds()))
+	h.invalidateAuthorCache(ctx.Request().Context())
 
 	return ctx.NoContent(http.StatusAccepted)
 }

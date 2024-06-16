@@ -125,3 +125,36 @@ func (r *MongoDbAuthRepository) ValidateUsernameUnique(ctx context.Context, user
 
 	return count == 0, nil
 }
+
+func (r *MongoDbAuthRepository) Update(ctx context.Context, id string, updateData *events.UpdateUserEventData) error {
+	objectId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+
+	collection := r.getCollection()
+
+	updateFields := bson.M{}
+
+	if updateData.FirstName != "" {
+		updateFields["FirstName"] = updateData.FirstName
+	}
+	if updateData.LastName != "" {
+		updateFields["LastName"] = updateData.LastName
+	}
+	if updateData.Username != "" {
+		updateFields["Username"] = updateData.Username
+	}
+
+	filter := bson.M{"_id": objectId}
+	update := bson.M{"$set": updateFields}
+
+	_, err = collection.UpdateOne(ctx, filter, update)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

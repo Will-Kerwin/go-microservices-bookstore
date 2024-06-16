@@ -49,6 +49,7 @@ services:
       - 8080:8080
     environment:
       CONSUL_URI: dev-consul:8500
+      REDIS_URI: redis:6379
       KAFKA_URI: broker
       PORT: 8080
       JWT_SECRET: "secret"
@@ -80,6 +81,12 @@ services:
       CONSUL_URI: dev-consul:8500
       KAFKA_URI: broker
       DbName: dbAuth
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - 6379:6379
 
 volumes:
   db-data:

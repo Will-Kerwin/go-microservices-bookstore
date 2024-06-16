@@ -95,7 +95,7 @@ func (r *MongoDbBookRepository) Update(ctx context.Context, id string, updateDat
 	filter := bson.M{"_id": objectId}
 	update := bson.M{"$set": updateFields}
 
-	_, err = collection.UpdateOne(context.Background(), filter, update)
+	_, err = collection.UpdateOne(ctx, filter, update)
 
 	if err != nil {
 		return err
