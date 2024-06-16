@@ -6,6 +6,7 @@ import (
 
 	booksModels "github.com/will-kerwin/go-microservice-bookstore/books/pkg/models"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -55,7 +56,7 @@ func (r *MongoDbBookRepository) Add(ctx context.Context, book *models.Book) (*mo
 	return book, nil
 }
 
-func (r *MongoDbBookRepository) Update(ctx context.Context, id string, updateData *models.UpdateBookEventData) error {
+func (r *MongoDbBookRepository) Update(ctx context.Context, id string, updateData *events.UpdateBookEventData) error {
 
 	objectId, err := primitive.ObjectIDFromHex(id)
 

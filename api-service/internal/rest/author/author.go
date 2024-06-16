@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -122,7 +123,7 @@ func (h *Handler) CreateAuthor(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "could not parse body"})
 	}
 
-	encodedEvent, err := json.Marshal(models.CreateAuthorEvent{
+	encodedEvent, err := json.Marshal(events.CreateAuthorEvent{
 		Name:        author.Name,
 		DateOfBirth: author.DateOfBirth,
 	})
@@ -167,7 +168,7 @@ func (h *Handler) DeleteAuthor(ctx echo.Context) error {
 	}
 	defer producer.Close()
 
-	encodedEvent, err := json.Marshal(models.DeleteAuthorEvent{ID: id})
+	encodedEvent, err := json.Marshal(events.DeleteAuthorEvent{ID: id})
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": err.Error()})
 	}

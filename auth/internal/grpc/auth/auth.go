@@ -9,7 +9,7 @@ import (
 	authModels "github.com/will-kerwin/go-microservice-bookstore/auth/pkg/models"
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/ingester"
-	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
 	userModels "github.com/will-kerwin/go-microservice-bookstore/pkg/models/user"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
@@ -19,11 +19,11 @@ import (
 type Handler struct {
 	gen.UnimplementedUserServiceServer
 	repository         db.AuthRepository
-	createUserIngester ingester.Ingester[models.CreateUserEvent]
+	createUserIngester ingester.Ingester[events.CreateUserEvent]
 }
 
 func New(repository db.AuthRepository, addr string, groupID string) *Handler {
-	createUserIngester, err := ingester.New[models.CreateUserEvent](addr, groupID, "createUser")
+	createUserIngester, err := ingester.New[events.CreateUserEvent](addr, groupID, "createUser")
 	if err != nil {
 		log.Fatalf("Failed to create ingester: %s\n", err)
 		createUserIngester = nil
@@ -115,7 +115,7 @@ func (h *Handler) GetUser(ctx context.Context, req *gen.GetUserRequest) (*gen.Ge
 	return &gen.GetUserResponse{User: userModels.UserToProto(user)}, nil
 }
 
-func (h *Handler) CreateUser(ctx context.Context, req *models.CreateUserEvent) error {
+func (h *Handler) CreateUser(ctx context.Context, req *events.CreateUserEvent) error {
 	if req == nil {
 		return status.Errorf(codes.InvalidArgument, "req was nil")
 	}

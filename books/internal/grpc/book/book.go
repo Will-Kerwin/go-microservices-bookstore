@@ -9,6 +9,7 @@ import (
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/ingester"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,26 +18,26 @@ import (
 type Handler struct {
 	gen.UnimplementedBookServiceServer
 	repository         db.BookRepository
-	createBookIngester ingester.Ingester[models.CreateBookEvent]
-	deleteBookIngester ingester.Ingester[models.DeleteBookEvent]
-	updateBookIngester ingester.Ingester[models.UpdateBookEvent]
+	createBookIngester ingester.Ingester[events.CreateBookEvent]
+	deleteBookIngester ingester.Ingester[events.DeleteBookEvent]
+	updateBookIngester ingester.Ingester[events.UpdateBookEvent]
 }
 
 func New(repository db.BookRepository, addr string, groupID string) *Handler {
 
-	createBookIngester, err := ingester.New[models.CreateBookEvent](addr, groupID, "createBook")
+	createBookIngester, err := ingester.New[events.CreateBookEvent](addr, groupID, "createBook")
 	if err != nil {
 		log.Fatalf("Failed to create ingester: %s\n", err)
 		createBookIngester = nil
 	}
 
-	deleteBookIngester, err := ingester.New[models.DeleteBookEvent](addr, groupID, "deleteBook")
+	deleteBookIngester, err := ingester.New[events.DeleteBookEvent](addr, groupID, "deleteBook")
 	if err != nil {
 		log.Fatalf("Failed to create ingester: %s\n", err)
 		deleteBookIngester = nil
 	}
 
-	updateBookIngester, err := ingester.New[models.UpdateBookEvent](addr, groupID, "updateBook")
+	updateBookIngester, err := ingester.New[events.UpdateBookEvent](addr, groupID, "updateBook")
 	if err != nil {
 		log.Fatalf("Failed to create ingester: %s\n", err)
 		updateBookIngester = nil
@@ -158,7 +159,7 @@ func (h *Handler) GetBook(ctx context.Context, req *gen.GetBookRequest) (*gen.Ge
 	return &gen.GetBookResponse{Book: models.BookToProto(book)}, nil
 }
 
-func (h *Handler) CreateBook(ctx context.Context, req *models.CreateBookEvent) error {
+func (h *Handler) CreateBook(ctx context.Context, req *events.CreateBookEvent) error {
 	if req == nil {
 		return status.Errorf(codes.InvalidArgument, "req was nil")
 	}
@@ -198,7 +199,7 @@ func (h *Handler) CreateBook(ctx context.Context, req *models.CreateBookEvent) e
 	return nil
 }
 
-func (h *Handler) UpdateBook(ctx context.Context, req *models.UpdateBookEvent) error {
+func (h *Handler) UpdateBook(ctx context.Context, req *events.UpdateBookEvent) error {
 
 	err := h.repository.Update(ctx, req.ID, &req.Data)
 
@@ -209,7 +210,7 @@ func (h *Handler) UpdateBook(ctx context.Context, req *models.UpdateBookEvent) e
 	return nil
 }
 
-func (h *Handler) DeleteBook(ctx context.Context, req *models.DeleteBookEvent) error {
+func (h *Handler) DeleteBook(ctx context.Context, req *events.DeleteBookEvent) error {
 	if req == nil || req.ID == "" {
 		return status.Errorf(codes.InvalidArgument, "req was nil, or id was empty")
 	}

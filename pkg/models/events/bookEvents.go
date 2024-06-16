@@ -1,4 +1,4 @@
-package models
+package events
 
 import "time"
 
@@ -34,13 +34,4 @@ type UpdateBookEventData struct {
 	Synopsis string `json:"synopsis,omitempty"`
 	ImageUrl string `json:"imageUrl,omitempty"`
 	Genre    string `json:"genre,omitempty"`
-}
-
-type CreateUserEvent struct {
-	ID        string `json:"_id,omitempty"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	Email     string `json:"email"`
-	FirstName string `json:"firstName,omitempty"`
-	LastName  string `json:"lastName,omitempty"`
 }

@@ -9,8 +9,9 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/labstack/echo/v4"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
-	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/middleware"
+	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/middleware"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -133,7 +134,7 @@ func (h *Handler) CreateUser(ctx echo.Context) error {
 	}
 
 	defer producer.Close()
-	createReq := new(models.CreateUserEvent)
+	createReq := new(events.CreateUserEvent)
 
 	if err := ctx.Bind(createReq); err != nil {
 		log.Println(err.Error())

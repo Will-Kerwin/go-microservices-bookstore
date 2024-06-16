@@ -9,6 +9,7 @@ import (
 	"github.com/will-kerwin/go-microservice-bookstore/gen"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/ingester"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,19 +18,19 @@ import (
 type Handler struct {
 	gen.UnimplementedAuthorServiceServer
 	repository           db.AuthorRepository
-	createAuthorIngester ingester.Ingester[models.CreateAuthorEvent]
-	deleteAuthorIngester ingester.Ingester[models.DeleteAuthorEvent]
+	createAuthorIngester ingester.Ingester[events.CreateAuthorEvent]
+	deleteAuthorIngester ingester.Ingester[events.DeleteAuthorEvent]
 }
 
 func New(repository db.AuthorRepository, addr string, groupID string) *Handler {
 
-	createAuthorIngester, err := ingester.New[models.CreateAuthorEvent](addr, groupID, "createAuthor")
+	createAuthorIngester, err := ingester.New[events.CreateAuthorEvent](addr, groupID, "createAuthor")
 	if err != nil {
 		log.Fatalf("Failed to create ingester: %s\n", err)
 		createAuthorIngester = nil
 	}
 
-	deleteAuthorIngester, err := ingester.New[models.DeleteAuthorEvent](addr, groupID, "deleteAuthor")
+	deleteAuthorIngester, err := ingester.New[events.DeleteAuthorEvent](addr, groupID, "deleteAuthor")
 	if err != nil {
 		log.Fatalf("Failed to create ingester: %s\n", err)
 		deleteAuthorIngester = nil
@@ -132,7 +133,7 @@ func (h *Handler) GetAuthor(ctx context.Context, req *gen.GetAuthorRequest) (*ge
 	return &gen.GetAuthorResponse{Author: models.AuthorToProto(author)}, nil
 }
 
-func (h *Handler) CreateAuthor(ctx context.Context, req *models.CreateAuthorEvent) error {
+func (h *Handler) CreateAuthor(ctx context.Context, req *events.CreateAuthorEvent) error {
 	if req == nil {
 		return status.Errorf(codes.InvalidArgument, "req was nil")
 	}
@@ -161,7 +162,7 @@ func (h *Handler) CreateAuthor(ctx context.Context, req *models.CreateAuthorEven
 	return nil
 }
 
-func (h *Handler) DeleteAuthor(ctx context.Context, req *models.DeleteAuthorEvent) error {
+func (h *Handler) DeleteAuthor(ctx context.Context, req *events.DeleteAuthorEvent) error {
 	if req == nil || req.ID == "" {
 		return status.Errorf(codes.InvalidArgument, "req was nil, or id was empty")
 	}

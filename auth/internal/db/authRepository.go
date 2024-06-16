@@ -5,7 +5,7 @@ import (
 	"os"
 
 	authModels "github.com/will-kerwin/go-microservice-bookstore/auth/pkg/models"
-	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -38,7 +38,7 @@ func (r *MongoDbAuthRepository) getCollection() *mongo.Collection {
 	return r.client.Database(dbName).Collection("users")
 }
 
-func (r *MongoDbAuthRepository) Add(ctx context.Context, user *models.CreateUserEvent) (*user.User, error) {
+func (r *MongoDbAuthRepository) Add(ctx context.Context, user *events.CreateUserEvent) (*user.User, error) {
 
 	hash, err := hashPassword(user.Password)
 

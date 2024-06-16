@@ -12,13 +12,13 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/auth"
 	authGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/auth"
 	authorGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/author"
 	bookGateway "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway/book"
 	authHandler "github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/auth"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/author"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/rest/book"
-	"github.com/will-kerwin/go-microservice-bookstore/api-service/pkg/auth"
 	_ "github.com/will-kerwin/go-microservice-bookstore/docs" // Import the docs
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/discovery"
 )

@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/will-kerwin/go-microservice-bookstore/api-service/internal/gateway"
 	"github.com/will-kerwin/go-microservice-bookstore/pkg/models"
+	"github.com/will-kerwin/go-microservice-bookstore/pkg/models/events"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -127,7 +128,7 @@ func (h *Handler) CreateBook(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "could not parse body"})
 	}
 
-	encodedEvent, err := json.Marshal(models.CreateBookEvent{
+	encodedEvent, err := json.Marshal(events.CreateBookEvent{
 		Title:    book.Title,
 		AuthorId: book.AuthorId,
 		Synopsis: book.Synopsis,
@@ -180,8 +181,8 @@ func (h *Handler) UpdateBook(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": "could not parse body"})
 	}
 
-	encodedEvent, err := json.Marshal(models.UpdateBookEvent{
-		Data: models.UpdateBookEventData{
+	encodedEvent, err := json.Marshal(events.UpdateBookEvent{
+		Data: events.UpdateBookEventData{
 			Title:    book.Title,
 			AuthorId: book.AuthorId,
 			Synopsis: book.Synopsis,
@@ -231,7 +232,7 @@ func (h *Handler) DeleteBook(ctx echo.Context) error {
 	}
 	defer producer.Close()
 
-	encodedEvent, err := json.Marshal(models.DeleteBookEvent{ID: id})
+	encodedEvent, err := json.Marshal(events.DeleteBookEvent{ID: id})
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, models.ApiErrorResponse{"error": err.Error()})
 	}
